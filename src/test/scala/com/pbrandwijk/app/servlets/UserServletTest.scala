@@ -185,6 +185,7 @@ class UserServletTest extends ScalatraFunSuite {
   test("POST /users/checkout on UserServlet creates new order and cleans user's shopping chart") {
     submit("POST", "/users/checkout", Seq.empty, Seq.empty, checkoutUser1Body) {
       status should equal (200)
+      body should equal ("""{ "orderNumber": 1, "totalPrice": 46.83}""")
       Model.users.get(user1email).get.chart.size should equal (0)
       Model.products.get(book1id).get.stock should equal (7)
       Model.products.get(book2id).get.stock should equal (3)
