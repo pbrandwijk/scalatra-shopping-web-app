@@ -79,4 +79,87 @@ class UserServletTest extends ScalatraFunSuite {
     }
   }
 
+  /* Tests for POST /users/addItemToUserChart */
+
+  test("POST /users/addItemToUserChart on UserServlet with invalid JSON should do nothing and give error " +
+    "message in header") {
+    submit("POST", "/users/addItemToUserChart", Seq.empty, Seq.empty, invalidJson) {
+      status should equal (200)
+      header.get("ACK") should not be None
+      header.get("ACK").get should equal ("Request body could not be parsed into JSON")
+    }
+  }
+
+  test("POST /users/addItemToUserChart on UserServlet with incomplete JSON should do nothing and give error " +
+    "message in header") {
+    submit("POST", "/users/addItemToUserChart", Seq.empty, Seq.empty, incompleteUserBody) {
+      status should equal (200)
+      header.get("ACK") should not be None
+      header.get("ACK").get should equal ("JSON cannot be mapped to item model")
+    }
+  }
+
+  test("POST /users/addItemToUserChart on UserServlet should add item and quantity to user in model " +
+    "and should decrease the stock of the product with the quantity") {
+    submit("POST", "/users/addItemToUserChart", Seq.empty, Seq.empty, addItemToUserChart1Body) {
+      status should equal (200)
+      Model.users.get(user1email).get.chart.size should equal (1)
+      Model.users.get(user1email).get.chart.get(book1id) should not be (None)
+      Model.users.get(user1email).get.chart.get(book1id).get should equal (1)
+      Model.products.get(book1id).get.stock should equal (9)
+    }
+  }
+
+  test("POST /users/addItemToUserChart on UserServlet when done twice should not doubly decrease the " +
+    "product in stock") {
+    submit("POST", "/users/addItemToUserChart", Seq.empty, Seq.empty, addItemToUserChart1Body) {
+      status should equal (200)
+      Model.users.get(user1email).get.chart.size should equal (1)
+      Model.users.get(user1email).get.chart.get(book1id) should not be (None)
+      Model.users.get(user1email).get.chart.get(book1id).get should equal (1)
+      Model.products.get(book1id).get.stock should equal (9)
+    }
+  }
+
+  test("POST /users/addItemToUserChart on UserServlet when done with same item but different quantity should " +
+    "update the quantity on user chart and in product stock") {
+    submit("POST", "/users/addItemToUserChart", Seq.empty, Seq.empty, addItemToUserChart2Body) {
+      status should equal (200)
+      Model.users.get(user1email).get.chart.size should equal (1)
+      Model.users.get(user1email).get.chart.get(book1id) should not be (None)
+      Model.users.get(user1email).get.chart.get(book1id).get should equal (3)
+      Model.products.get(book1id).get.stock should equal (7)
+    }
+  }
+
+  test("POST /users/addItemToUserChart on UserServlet when done with a quantity bigger that the stock" +
+    "should not do anything") {
+    submit("POST", "/users/addItemToUserChart", Seq.empty, Seq.empty, addItemToUserChart3Body) {
+      status should equal (200)
+      Model.users.get(user1email).get.chart.size should equal (1)
+      Model.users.get(user1email).get.chart.get(book2id) should be (None)
+      Model.products.get(book2id).get.stock should equal (5)
+    }
+  }
+
+  test("POST /users/addItemToUserChart on UserServlet when done with a second item should add a " +
+    "second item to the user's shopping chart") {
+    submit("POST", "/users/addItemToUserChart", Seq.empty, Seq.empty, addItemToUserChart4Body) {
+      status should equal (200)
+      Model.users.get(user1email).get.chart.size should equal (2)
+      Model.users.get(user1email).get.chart.get(book2id) should not be (None)
+      Model.users.get(user1email).get.chart.get(book2id).get should be (2)
+      Model.products.get(book2id).get.stock should equal (3)
+    }
+  }
+
+  test("POST /users/addItemToUserChart on UserServlet when done an invalid value for quantity " +
+    "should give an error message in header") {
+    submit("POST", "/users/addItemToUserChart", Seq.empty, Seq.empty, addItemToUserChart5Body) {
+      status should equal (200)
+      header.get("ACK") should not be None
+      header.get("ACK").get should equal ("Value for quantity cannot be parsed as an integer")
+    }
+  }
+
 }
