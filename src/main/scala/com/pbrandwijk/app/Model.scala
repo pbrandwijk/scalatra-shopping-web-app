@@ -121,4 +121,56 @@ object Model {
     return Right(user.get)
   }
 
+  /**
+    * Add an order to the orders list with an order number. Increase the order number for the next order. Clean the
+    * user's shopping chart after placing the order.
+    *
+    * If the user does not exist, do nothing and return error message.
+    * If the shopping chart of the user is empty, do nothing and return error message.
+    *
+    * @param email The uniquely identifying user email address
+    * @param address The shipping address to which to ship the order
+    * @return The order number and total price if checkout succeeded, else an error message
+    */
+  def addOrder(email: String, address: String): Either[String,(Int, Double)] = {
+
+    // check if user exists or shopping chart is empty
+    val userOption = users.get(email)
+    if (userOption.isEmpty || userOption.get.chart.isEmpty) {
+      return Left("User does not exist or user's shopping chart is empty")
+    }
+
+    // get a clone of the shopping chart for this user
+    val user = userOption.get
+    val items = user.chart.clone()
+
+    // go over all items to calculate the total price
+    var total : Double = 0.0
+    items.foreach {
+      case(id, quantity) =>
+        // find product price
+        val productPrice = products.get(id).get.price
+        // multiply product price by quantity and add to total
+        total += productPrice * quantity
+    }
+    logger.info("Calculated total price of order: " + total)
+
+    // assemble order object
+    val order = new Order(email, address, total, items)
+
+    // set the order number to the current reference
+    val orderNumber = orderReference
+
+    // store the order
+    orders += (orderNumber -> order)
+
+    // increment the global order reference to set it up for the next item
+    orderReference += 1
+
+    // clean the shopping chart of the user
+    user.chart = new HashMap[String, Int]
+
+    return Right(orderNumber, total)
+  }
+
 }
