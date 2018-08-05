@@ -45,4 +45,24 @@ object Model {
     return Right(product)
   }
 
+  /**
+    * Add a user to the model.
+    *
+    * If the email address is already present, then do nothing.
+    *
+    * @param user The user to add
+    * @return Either the user if added successfully, or an error message if not
+    */
+  def addUser(user: User): Either[String, User] = {
+
+    if ((users get user.email) == None) {
+      users += (user.email -> user)
+      logger.info("Added new user: " + user)
+      return Right(user)
+    }
+    else {
+      return Left("User already present")
+    }
+  }
+
 }
