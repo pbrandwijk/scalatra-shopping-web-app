@@ -1,6 +1,5 @@
-package com.pbrandwijk.app
+package com.pbrandwijk.app.servlets
 
-import com.pbrandwijk.app.servlets.ProductServlet
 import org.scalatra.test.scalatest._
 
 class ProductServletTests extends ScalatraFunSuite {
