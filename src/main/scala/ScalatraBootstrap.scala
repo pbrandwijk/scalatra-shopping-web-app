@@ -1,4 +1,5 @@
 import com.pbrandwijk.app._
+import com.pbrandwijk.app.servlets.ProductServlet
 import org.scalatra._
 import javax.servlet.ServletContext
 

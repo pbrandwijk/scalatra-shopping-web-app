@@ -1,4 +1,4 @@
-package com.pbrandwijk.app
+package com.pbrandwijk.app.servlets
 
 import org.scalatra._
 
