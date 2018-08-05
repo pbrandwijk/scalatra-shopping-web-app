@@ -65,4 +65,60 @@ object Model {
     }
   }
 
+  /**
+    * Add an item and quantity to a user's shopping chart. Also remove the requested quantity from the
+    * product's stock.
+    *
+    * If either there is no user object in the model for the given email address or no product for the item id,
+    * then do nothing.
+    * If there are not enough items of the product in stock, then do nothing.
+    * If the chart of the user already has an entry for the given product id, then update the quantity on the chart
+    * and in the product stock.
+    *
+    * @param email The uniquely identifying user email address
+    * @param id The uniquely identifying product id
+    * @param quantity The quantity of the given item to be added
+    * @return Either the user if chart updated successfully, or an error message if not
+    */
+  def addItemToUserChart(email: String, id: String, quantity: Int): Either[String, User] = {
+
+    val user = users get email
+    val product = products get id
+
+    // check if user and item exist
+    if (user == None || product == None) {
+      return Left("Given user or item does not exist")
+    }
+
+    // check that the product is sufficiently in stock
+    if (quantity > product.get.stock) {
+      return Left("Not enough items of product in stock")
+    }
+
+    // check if user already has this item on their chart
+    val itemOnChart = user.get.chart.get(id)
+    // if so, update product stock and chart
+    if (itemOnChart != None) {
+
+      // calculate quantity difference
+      val qDiff = quantity - itemOnChart.get
+
+      // update product stock
+      product.get.stock -= qDiff
+
+      // update quantity on user chart
+      user.get.addItemToChart(id, quantity)
+    }
+    else {
+      // add the item and quantity to the stock
+      user.get.addItemToChart(id, quantity)
+
+      // remove the quantity from the product in stock
+      product.get.stock -= quantity
+    }
+
+    // return the user with updated chart
+    return Right(user.get)
+  }
+
 }
