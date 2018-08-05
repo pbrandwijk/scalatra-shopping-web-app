@@ -145,18 +145,20 @@ object Model {
     val items = user.chart.clone()
 
     // go over all items to calculate the total price
-    var total : Double = 0.0
+    var totalPrice : Double = 0.0
     items.foreach {
       case(id, quantity) =>
         // find product price
         val productPrice = products.get(id).get.price
         // multiply product price by quantity and add to total
-        total += productPrice * quantity
+        totalPrice += productPrice * quantity
     }
-    logger.info("Calculated total price of order: " + total)
+    // Round up the total
+    totalPrice = BigDecimal(totalPrice).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+    logger.info("Calculated total price of order: " + totalPrice)
 
     // assemble order object
-    val order = new Order(email, address, total, items)
+    val order = new Order(email, address, totalPrice, items)
 
     // set the order number to the current reference
     val orderNumber = orderReference
@@ -170,7 +172,7 @@ object Model {
     // clean the shopping chart of the user
     user.chart = new HashMap[String, Int]
 
-    return Right(orderNumber, total)
+    return Right(orderNumber, totalPrice)
   }
 
 }

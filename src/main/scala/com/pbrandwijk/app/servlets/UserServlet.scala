@@ -209,7 +209,7 @@ class UserServlet extends ScalatraServlet {
               // confirm that checkout succeeded in the response header
               response.addHeader("ACK", "Checkout succeeded")
               // return the order number and total price as JSON
-              "{ \"orderNumber\": " + orderNumber + ", \"total\": " + total + "}"
+              "{ \"orderNumber\": " + orderNumber + ", \"totalPrice\": " + total + "}"
             }
           }
         }
