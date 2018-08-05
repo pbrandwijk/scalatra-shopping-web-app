@@ -22,4 +22,27 @@ object Model {
   // orders are stored in a mutable HashMap
   var orders = new HashMap[Int, Order]
 
+  /**
+    * Add a product to the model.
+    *
+    * If the id is already present, then overwrite the existing product.
+    *
+    * @param product The product to add
+    * @return Either the product if added successfully, or an error message if not
+    */
+  def addProduct(product: Product): Either[String, Product] = {
+
+    if ((products get product.id) == None) {
+      products += (product.id -> product)
+      logger.info("Added new product: " + product)
+    }
+    else {
+      products -= product.id
+      products += (product.id -> product)
+      logger.info("Updated product: " + product)
+    }
+    logger.debug("All products: " + products)
+    return Right(product)
+  }
+
 }
