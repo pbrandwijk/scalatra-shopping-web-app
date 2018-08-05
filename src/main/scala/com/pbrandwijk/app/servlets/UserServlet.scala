@@ -83,4 +83,76 @@ class UserServlet extends ScalatraServlet {
     }
   }
 
+  /**
+    * Request to add item to user's chart. Respond with user in body if successful.
+    *
+    * If request body cannot be parsed into JSON, respond with error message in header.
+    * If JSON cannot be mapped to item model, respond with error message in header.
+    * If given quantity cannot be parsed, respond with error message in header.
+    * If item cannot be added to chart by model, respond with error message in header.
+    *
+    * Expects an incoming JSON string like this:
+    * { "email": "johndoe@example.com", "id": "book001", "quantity": "1" }
+    */
+  post("/addItemToUserChart") {
+
+    // get the POST request data
+    val jsonString = request.body
+
+    // needed for Lift-JSON
+    implicit val formats = DefaultFormats
+
+    // convert the JSON string to a JValue object and check for errors
+    Util.parseJsonString(jsonString) match {
+      case Some(jValue) => {
+
+        // deserialize the request json into a holder object
+        case class AddItemModel(email: String, id: String, quantity: String)
+        var iModel: AddItemModel = null
+        try {
+          iModel = jValue.extract[AddItemModel]
+        } catch { case e: MappingException => logger.warn("Mapping of JSON failed: " + e.getMessage) }
+
+        // Only proceed if mapping succeeded
+        if (iModel != null) {
+
+          // check if quantity can be parsed as Int
+          Util.toInt(iModel.quantity) match {
+            case Some(q) => {
+              // update the user shopping chart in the model
+              val result = Model.addItemToUserChart(iModel.email, iModel.id, q)
+
+              // check if adding item to chart was successful
+              result match {
+                case Left(msg) => {
+                  // notify in header that adding item to chart failed
+                  response.addHeader("ACK", "Adding item to chart failed: " + msg)
+                }
+                case Right(u) => {
+                  // confirm that item was added to chart in the response header
+                  response.addHeader("ACK", "Item added to chart")
+
+                  // give user back as JSON in the response body
+                  write(u)
+                }
+              }
+            }
+            case None => {
+              // notify in header that quantity cannot be parsed as integer
+              response.addHeader("ACK", "Value for quantity cannot be parsed as an integer")
+            }
+          }
+        }
+        else {
+          // notify in header that JSON cannot be mapped to item model
+          response.addHeader("ACK", "JSON cannot be mapped to item model")
+        }
+      }
+      case None => {
+        // notify in header that request body could not be parsed into JSON
+        response.addHeader("ACK", "Request body could not be parsed into JSON")
+      }
+    }
+  }
+
 }
