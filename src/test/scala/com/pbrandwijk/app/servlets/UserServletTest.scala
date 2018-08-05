@@ -162,4 +162,55 @@ class UserServletTest extends ScalatraFunSuite {
     }
   }
 
+  /* Tests for POST /users/checkout */
+
+  test("POST /users/checkout on UserServlet with invalid JSON should do nothing and give error " +
+    "message in header") {
+    submit("POST", "/users/checkout", Seq.empty, Seq.empty, invalidJson) {
+      status should equal (200)
+      header.get("ACK") should not be None
+      header.get("ACK").get should equal ("Request body could not be parsed into JSON")
+    }
+  }
+
+  test("POST /users/checkout on UserServlet with incomplete JSON should do nothing and give error " +
+    "message in header") {
+    submit("POST", "/users/checkout", Seq.empty, Seq.empty, incompleteUserBody) {
+      status should equal (200)
+      header.get("ACK") should not be None
+      header.get("ACK").get should equal ("JSON cannot be mapped to checkout model")
+    }
+  }
+
+  test("POST /users/checkout on UserServlet creates new order and cleans user's shopping chart") {
+    submit("POST", "/users/checkout", Seq.empty, Seq.empty, checkoutUser1Body) {
+      status should equal (200)
+      Model.users.get(user1email).get.chart.size should equal (0)
+      Model.products.get(book1id).get.stock should equal (7)
+      Model.products.get(book2id).get.stock should equal (3)
+      Model.orders.size should equal (1)
+      Model.orders.get(1).get.items.size should equal (2)
+    }
+  }
+
+  test("GET /users/orders on UserServlet should return status 200") {
+    get("/users/orders") {
+      status should equal (200)
+      body should include ("Johnsville")
+    }
+  }
+
+  test("POST /users/checkout on UserServlet when chart is empty does nothing and gives 200 with error message in header") {
+    submit("POST", "/users/checkout", Seq.empty, Seq.empty, checkoutUser1Body) {
+      status should equal (200)
+      header.get("ACK") should not be None
+      header.get("ACK").get should include ("shopping chart is empty")
+      Model.users.get(user1email).get.chart.size should equal (0)
+      Model.products.get(book1id).get.stock should equal (7)
+      Model.products.get(book2id).get.stock should equal (3)
+      Model.orders.size should equal (1)
+      Model.orders.get(1).get.items.size should equal (2)
+    }
+  }
+
 }
