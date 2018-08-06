@@ -57,19 +57,19 @@ If you perform this call more than once for the same email address, then no chan
 http --verbose GET http://localhost:8080/users/
 ```
 
-## Add an item to a user's shopping chart ##
+## Add an item to a user's shopping cart ##
 
 If either the given user or the given product does not exist, this call has no action. Also, if the requested quantity
 exceeds the available product stock, there is also no action.
 
 ```sh
-echo '{ "email": "johndoe@example.com", "id": "book001", "quantity": "1" }' | http --verbose POST http://localhost:8080/users/addItemToUserChart
+echo '{ "email": "johndoe@example.com", "id": "book001", "quantity": "1" }' | http --verbose POST http://localhost:8080/users/addItemToUsercart
 ```
 
 If the call was successful, you get the user back in JSON format. If the JSON in your request was invalid or incomplete, or
-the item could not be added to the chart, you get an error message in the response header field `ACK`.
+the item could not be added to the cart, you get an error message in the response header field `ACK`.
 
-## Checkout a user's shopping chart ##
+## Checkout a user's shopping cart ##
 
 ```sh
 echo '{ "email": "johndoe@example.com", "address": "Mainstreet 1, Johnsville" }' | http --verbose POST http://localhost:8080/users/checkout

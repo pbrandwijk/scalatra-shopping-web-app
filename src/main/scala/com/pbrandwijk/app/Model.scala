@@ -66,21 +66,21 @@ object Model {
   }
 
   /**
-    * Add an item and quantity to a user's shopping chart. Also remove the requested quantity from the
+    * Add an item and quantity to a user's shopping cart. Also remove the requested quantity from the
     * product's stock.
     *
     * If either there is no user object in the model for the given email address or no product for the item id,
     * then do nothing.
     * If there are not enough items of the product in stock, then do nothing.
-    * If the chart of the user already has an entry for the given product id, then update the quantity on the chart
+    * If the cart of the user already has an entry for the given product id, then update the quantity on the cart
     * and in the product stock.
     *
     * @param email The uniquely identifying user email address
     * @param id The uniquely identifying product id
     * @param quantity The quantity of the given item to be added
-    * @return Either the user if chart updated successfully, or an error message if not
+    * @return Either the user if cart updated successfully, or an error message if not
     */
-  def addItemToUserChart(email: String, id: String, quantity: Int): Either[String, User] = {
+  def addItemToUserCart(email: String, id: String, quantity: Int): Either[String, User] = {
 
     val user = users get email
     val product = products get id
@@ -95,38 +95,38 @@ object Model {
       return Left("Not enough items of product in stock")
     }
 
-    // check if user already has this item on their chart
-    val itemOnChart = user.get.chart.get(id)
-    // if so, update product stock and chart
-    if (itemOnChart != None) {
+    // check if user already has this item on their cart
+    val itemOnCart = user.get.cart.get(id)
+    // if so, update product stock and cart
+    if (itemOnCart != None) {
 
       // calculate quantity difference
-      val qDiff = quantity - itemOnChart.get
+      val qDiff = quantity - itemOnCart.get
 
       // update product stock
       product.get.stock -= qDiff
 
-      // update quantity on user chart
-      user.get.addItemToChart(id, quantity)
+      // update quantity on user cart
+      user.get.addItemToCart(id, quantity)
     }
     else {
       // add the item and quantity to the stock
-      user.get.addItemToChart(id, quantity)
+      user.get.addItemToCart(id, quantity)
 
       // remove the quantity from the product in stock
       product.get.stock -= quantity
     }
 
-    // return the user with updated chart
+    // return the user with updated cart
     return Right(user.get)
   }
 
   /**
     * Add an order to the orders list with an order number. Increase the order number for the next order. Clean the
-    * user's shopping chart after placing the order.
+    * user's shopping cart after placing the order.
     *
     * If the user does not exist, do nothing and return error message.
-    * If the shopping chart of the user is empty, do nothing and return error message.
+    * If the shopping cart of the user is empty, do nothing and return error message.
     *
     * @param email The uniquely identifying user email address
     * @param address The shipping address to which to ship the order
@@ -134,15 +134,15 @@ object Model {
     */
   def addOrder(email: String, address: String): Either[String,(Int, Double)] = {
 
-    // check if user exists or shopping chart is empty
+    // check if user exists or shopping cart is empty
     val userOption = users.get(email)
-    if (userOption.isEmpty || userOption.get.chart.isEmpty) {
-      return Left("User does not exist or user's shopping chart is empty")
+    if (userOption.isEmpty || userOption.get.cart.isEmpty) {
+      return Left("User does not exist or user's shopping cart is empty")
     }
 
-    // get a clone of the shopping chart for this user
+    // get a clone of the shopping cart for this user
     val user = userOption.get
-    val items = user.chart.clone()
+    val items = user.cart.clone()
 
     // go over all items to calculate the total price
     var totalPrice : Double = 0.0
@@ -169,8 +169,8 @@ object Model {
     // increment the global order reference to set it up for the next item
     orderReference += 1
 
-    // clean the shopping chart of the user
-    user.chart = new HashMap[String, Int]
+    // clean the shopping cart of the user
+    user.cart = new HashMap[String, Int]
 
     return Right(orderNumber, totalPrice)
   }

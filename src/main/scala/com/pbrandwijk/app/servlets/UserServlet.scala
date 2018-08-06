@@ -94,17 +94,17 @@ class UserServlet extends ScalatraServlet {
   }
 
   /**
-    * Request to add item to user's chart. Respond with user in body if successful.
+    * Request to add item to user's cart. Respond with user in body if successful.
     *
     * If request body cannot be parsed into JSON, respond with error message in header.
     * If JSON cannot be mapped to item model, respond with error message in header.
     * If given quantity cannot be parsed, respond with error message in header.
-    * If item cannot be added to chart by model, respond with error message in header.
+    * If item cannot be added to cart by model, respond with error message in header.
     *
     * Expects an incoming JSON string like this:
     * { "email": "johndoe@example.com", "id": "book001", "quantity": "1" }
     */
-  post("/addItemToUserChart") {
+  post("/addItemToUserCart") {
 
     // get the POST request data
     val jsonString = request.body
@@ -129,18 +129,18 @@ class UserServlet extends ScalatraServlet {
           // check if quantity can be parsed as Int
           Util.toInt(iModel.quantity) match {
             case Some(q) => {
-              // update the user shopping chart in the model
-              val result = Model.addItemToUserChart(iModel.email, iModel.id, q)
+              // update the user shopping cart in the model
+              val result = Model.addItemToUserCart(iModel.email, iModel.id, q)
 
-              // check if adding item to chart was successful
+              // check if adding item to cart was successful
               result match {
                 case Left(msg) => {
-                  // notify in header that adding item to chart failed
-                  response.addHeader("ACK", "Adding item to chart failed: " + msg)
+                  // notify in header that adding item to cart failed
+                  response.addHeader("ACK", "Adding item to cart failed: " + msg)
                 }
                 case Right(u) => {
-                  // confirm that item was added to chart in the response header
-                  response.addHeader("ACK", "Item added to chart")
+                  // confirm that item was added to cart in the response header
+                  response.addHeader("ACK", "Item added to cart")
 
                   // give user back as JSON in the response body
                   write(u)
@@ -166,7 +166,7 @@ class UserServlet extends ScalatraServlet {
   }
 
   /**
-    * Request to check out chart and create an order. Respond with order number and total price in body if successful.
+    * Request to check out cart and create an order. Respond with order number and total price in body if successful.
     *
     * If request body cannot be parsed into JSON, respond with error message in header.
     * If JSON cannot be mapped to checkout model, respond with error message in header.
