@@ -63,7 +63,7 @@ If either the given user or the given product does not exist, this call has no a
 exceeds the available product stock, there is also no action.
 
 ```sh
-echo '{ "email": "johndoe@example.com", "id": "book001", "quantity": "1" }' | http --verbose POST http://localhost:8080/users/addItemToUsercart
+echo '{ "email": "johndoe@example.com", "id": "book001", "quantity": "1" }' | http --verbose POST http://localhost:8080/users/addItemToUserCart
 ```
 
 If the call was successful, you get the user back in JSON format. If the JSON in your request was invalid or incomplete, or
